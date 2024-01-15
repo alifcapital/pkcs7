@@ -1,3 +1,3 @@
 module github.com/alifcapital/pkcs7
 
-go 1.11
+go 1.16
