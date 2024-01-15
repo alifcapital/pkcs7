@@ -21,6 +21,7 @@ type SignedData struct {
 	data, messageDigest []byte
 	digestOid           asn1.ObjectIdentifier
 	encryptionOid       asn1.ObjectIdentifier
+	withoutCerts        bool
 }
 
 // NewSignedData takes data and initializes a PKCS7 SignedData struct that is
@@ -291,9 +292,15 @@ func (sd *SignedData) GetSignedData() *signedData {
 	return &sd.sd
 }
 
+func (sd *SignedData) WithoutCertificates() {
+	sd.withoutCerts = true
+}
+
 // Finish marshals the content and its signers
 func (sd *SignedData) Finish() ([]byte, error) {
-	sd.sd.Certificates = marshalCertificates(sd.certs)
+	if !sd.withoutCerts {
+		sd.sd.Certificates = marshalCertificates(sd.certs)
+	}
 	inner, err := asn1.Marshal(sd.sd)
 	if err != nil {
 		return nil, err
