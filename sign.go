@@ -298,9 +298,14 @@ func (sd *SignedData) WithoutCertificates() {
 
 // Finish marshals the content and its signers
 func (sd *SignedData) Finish() ([]byte, error) {
+	var buf bytes.Buffer
 	if !sd.withoutCerts {
-		sd.sd.Certificates = marshalCertificates(sd.certs)
+		for _, cert := range sd.certs {
+			buf.Write(cert.Raw)
+		}
 	}
+	sd.sd.Certificates, _ = marshalCertificateBytes(buf.Bytes())
+
 	inner, err := asn1.Marshal(sd.sd)
 	if err != nil {
 		return nil, err
@@ -386,16 +391,6 @@ func signAttributes(attrs []attribute, pkey crypto.PrivateKey, digestAlg crypto.
 
 type dsaSignature struct {
 	R, S *big.Int
-}
-
-// concats and wraps the certificates in the RawValue structure
-func marshalCertificates(certs []*x509.Certificate) rawCertificates {
-	var buf bytes.Buffer
-	for _, cert := range certs {
-		buf.Write(cert.Raw)
-	}
-	rawCerts, _ := marshalCertificateBytes(buf.Bytes())
-	return rawCerts
 }
 
 // Even though, the tag & length are stripped out during marshalling the
